@@ -229,6 +229,14 @@ async function executeGraphTool(
       headers,
     };
 
+    // Default calendar event body contentType to html if not specified
+    if (body && typeof body === 'object' && 'body' in body) {
+      const b = body as Record<string, unknown>;
+      if (b.body && typeof b.body === 'object' && !('contentType' in (b.body as Record<string, unknown>))) {
+        (b.body as Record<string, unknown>).contentType = 'html';
+      }
+    }
+
     if (options.method !== 'GET' && body) {
       if (config?.contentType === 'text/html') {
         if (typeof body === 'string') {
@@ -388,6 +396,60 @@ export function registerGraphTools(
   let registeredCount = 0;
   let skippedCount = 0;
   let failedCount = 0;
+
+  // Register execute-parallel meta-tool first so it appears at the top of the tool list
+  const parallelRegistry = buildToolsRegistry(readOnly, orgMode);
+  server.tool(
+    'execute-parallel',
+    'Execute multiple tools in parallel (max 10). Returns results in same order as input.',
+    {
+      calls: z
+        .array(
+          z.object({
+            tool_name: z.string().describe('Name of the tool to execute'),
+            parameters: z.record(z.any()).optional().describe('Parameters for the tool'),
+          })
+        )
+        .min(1)
+        .max(10)
+        .describe('Array of tool calls to execute in parallel'),
+    },
+    {
+      title: 'execute-parallel',
+      readOnlyHint: false,
+      destructiveHint: true,
+      openWorldHint: true,
+    },
+    async ({ calls }) => {
+      const results = await Promise.allSettled(
+        calls.map(async (call) => {
+          const toolData = parallelRegistry.get(call.tool_name);
+          if (!toolData) {
+            throw new Error(`Tool not found: ${call.tool_name}`);
+          }
+          return executeGraphTool(
+            toolData.tool,
+            toolData.config,
+            graphClient,
+            call.parameters || {}
+          );
+        })
+      );
+
+      const output = results.map((result, i) => ({
+        tool_name: calls[i].tool_name,
+        status: result.status,
+        ...(result.status === 'fulfilled'
+          ? { result: JSON.parse(result.value.content[0]?.text || '{}') }
+          : { error: (result as PromiseRejectedResult).reason?.message || 'Unknown error' }),
+      }));
+
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(output, null, 2) }],
+      };
+    }
+  );
+  registeredCount++;
 
   for (const tool of api.endpoints) {
     const endpointConfig = endpointsData.find((e) => e.toolName === tool.alias);

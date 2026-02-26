@@ -39,6 +39,42 @@
     "llmTip": "CRITICAL: Do not try to guess the email address of the recipients. Use the list-users tool to find the email address of the recipients."
   },
   {
+    "pathPattern": "/me/mailFolders/inbox/messageRules",
+    "method": "get",
+    "toolName": "list-mail-rules",
+    "skipGenerate": true,
+    "scopes": ["MailboxSettings.Read"]
+  },
+  {
+    "pathPattern": "/me/mailFolders/inbox/messageRules/{messageRule-id}",
+    "method": "get",
+    "toolName": "get-mail-rule",
+    "skipGenerate": true,
+    "scopes": ["MailboxSettings.Read"]
+  },
+  {
+    "pathPattern": "/me/mailFolders/inbox/messageRules",
+    "method": "post",
+    "toolName": "create-mail-rule",
+    "skipGenerate": true,
+    "scopes": ["MailboxSettings.ReadWrite"],
+    "llmTip": "Creates an inbox rule. Body requires: displayName, sequence (int), conditions (e.g. {fromAddresses: [{emailAddress: {address: 'user@example.com'}}]}), and actions (e.g. {moveToFolder: 'folder-id', stopProcessingRules: true}). Use list-mail-folders to find folder IDs."
+  },
+  {
+    "pathPattern": "/me/mailFolders/inbox/messageRules/{messageRule-id}",
+    "method": "patch",
+    "toolName": "update-mail-rule",
+    "skipGenerate": true,
+    "scopes": ["MailboxSettings.ReadWrite"]
+  },
+  {
+    "pathPattern": "/me/mailFolders/inbox/messageRules/{messageRule-id}",
+    "method": "delete",
+    "toolName": "delete-mail-rule",
+    "skipGenerate": true,
+    "scopes": ["MailboxSettings.ReadWrite"]
+  },
+  {
     "pathPattern": "/users/{user-id}/messages",
     "method": "get",
     "toolName": "list-shared-mailbox-messages",
@@ -278,6 +314,14 @@
     "workScopes": ["Calendars.Read.Shared"]
   },
   {
+    "pathPattern": "/places/microsoft.graph.room",
+    "method": "get",
+    "toolName": "list-rooms",
+    "skipGenerate": true,
+    "workScopes": ["Place.Read.All"],
+    "llmTip": "Lists all conference rooms in the organization. Returns room name, email address, capacity, building, floor, and equipment (e.g., audio, video, display). Use the room email address when booking via create-calendar-event by adding it as an attendee."
+  },
+  {
     "pathPattern": "/me/drives",
     "method": "get",
     "toolName": "list-drives",
@@ -321,24 +365,47 @@
     "scopes": ["Files.ReadWrite"]
   },
   {
-    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/workbook/worksheets/{workbookWorksheet-id}/charts/add",
+    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/createLink",
     "method": "post",
-    "toolName": "create-excel-chart",
-    "isExcelOp": true,
+    "toolName": "create-sharing-link",
+    "skipGenerate": true,
+    "scopes": ["Files.ReadWrite"],
+    "llmTip": "Creates a sharing link for a file or folder. Required body: {type: 'view'|'edit'|'embed', scope: 'anonymous'|'organization'}. Optional: expirationDateTime, password."
+  },
+  {
+    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/invite",
+    "method": "post",
+    "toolName": "share-file-with-users",
+    "skipGenerate": true,
+    "scopes": ["Files.ReadWrite"],
+    "llmTip": "Shares a file/folder with specific people. Required body: {recipients: [{email: 'user@example.com'}], roles: ['read'|'write'], requireSignIn: true, sendInvitation: true, message: 'optional message'}."
+  },
+  {
+    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/permissions",
+    "method": "get",
+    "toolName": "list-file-permissions",
+    "skipGenerate": true,
+    "scopes": ["Files.Read"]
+  },
+  {
+    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/permissions/{perm-id}",
+    "method": "delete",
+    "toolName": "remove-file-permission",
+    "skipGenerate": true,
     "scopes": ["Files.ReadWrite"]
   },
   {
-    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/workbook/worksheets/{workbookWorksheet-id}/range()/format",
-    "method": "patch",
-    "toolName": "format-excel-range",
-    "isExcelOp": true,
-    "scopes": ["Files.ReadWrite"]
+    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/versions",
+    "method": "get",
+    "toolName": "list-file-versions",
+    "skipGenerate": true,
+    "scopes": ["Files.Read"]
   },
   {
-    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/workbook/worksheets/{workbookWorksheet-id}/range()/sort",
-    "method": "patch",
-    "toolName": "sort-excel-range",
-    "isExcelOp": true,
+    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/versions/{version-id}/restoreVersion",
+    "method": "post",
+    "toolName": "restore-file-version",
+    "skipGenerate": true,
     "scopes": ["Files.ReadWrite"]
   },
   {
@@ -348,6 +415,31 @@
     "isExcelOp": true,
     "scopes": ["Files.Read"],
     "skipEncoding": ["address"]
+  },
+  {
+    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/workbook/worksheets/{workbookWorksheet-id}",
+    "method": "get",
+    "toolName": "get-excel-worksheet",
+    "skipGenerate": true,
+    "isExcelOp": true,
+    "scopes": ["Files.Read"]
+  },
+  {
+    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/workbook/worksheets/{workbookWorksheet-id}/usedRange",
+    "method": "get",
+    "toolName": "get-excel-used-range",
+    "skipGenerate": true,
+    "isExcelOp": true,
+    "scopes": ["Files.Read"]
+  },
+  {
+    "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/workbook/worksheets/{workbookWorksheet-id}/cell(row={row},column={column})",
+    "method": "get",
+    "toolName": "get-excel-cell",
+    "skipGenerate": true,
+    "isExcelOp": true,
+    "scopes": ["Files.Read"],
+    "skipEncoding": ["row", "column"]
   },
   {
     "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/workbook/worksheets",

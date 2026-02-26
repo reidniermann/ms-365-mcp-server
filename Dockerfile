@@ -19,4 +19,6 @@ COPY --from=builder /app/package*.json ./
 ENV NODE_ENV=production
 RUN npm i --ignore-scripts --omit=dev
 
-ENTRYPOINT ["node", "dist/index.js"]
+EXPOSE 3000
+
+ENTRYPOINT ["node", "dist/index.js", "--http", "0.0.0.0:3000", "--org-mode", "--enable-dynamic-registration"]

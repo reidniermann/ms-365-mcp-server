@@ -1,0 +1,13 @@
+node_modules
+.git
+.env
+.env.*
+dist
+coverage
+.nyc_output
+*.tgz
+.token-cache.json
+.selected-account.json
+.claude
+.idea
+.DS_Store
